@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>今日运势</title>
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Noto Sans JP", sans-serif;
+      background: linear-gradient(160deg, #06c755 0%, #00b900 45%, #008f3d 100%);
+      color: #1f2937;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 24px 16px;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 420px;
+      background: #ffffff;
+      border-radius: 28px;
+      padding: 24px 20px 20px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.18);
+      text-align: center;
+    }
+
+    .profile {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-align: left;
+      margin-bottom: 18px;
+      padding: 10px;
+      background: #f3f4f6;
+      border-radius: 16px;
+    }
+
+    .profile.hidden {
+      display: none;
+    }
+
+    .profile img {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      object-fit: cover;
+      background: #ddd;
+    }
+
+    .profile-name {
+      font-size: 15px;
+      font-weight: 700;
+      color: #111827;
+    }
+
+    .profile-sub {
+      font-size: 11px;
+      color: #6b7280;
+      margin-top: 2px;
+    }
+
+    h1 {
+      margin: 8px 0 6px;
+      font-size: 26px;
+      letter-spacing: 0.02em;
+    }
+
+    .status {
+      margin: 0 0 18px;
+      font-size: 12px;
+      color: #6b7280;
+      min-height: 18px;
+    }
+
+    .card {
+      margin: 16px 0 20px;
+      padding: 26px 18px;
+      border-radius: 22px;
+      background: linear-gradient(180deg, #f9fafb 0%, #f3f4f6 100%);
+      border: 1px solid #e5e7eb;
+      transition: transform 0.18s ease, opacity 0.18s ease;
+    }
+
+    .card.hidden {
+      display: none;
+    }
+
+    .card.pop {
+      animation: pop 0.28s ease;
+    }
+
+    @keyframes pop {
+      0% { transform: scale(0.92); opacity: 0.5; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    .emoji {
+      font-size: 52px;
+      line-height: 1;
+      margin-bottom: 12px;
+    }
+
+    .fortune-title {
+      font-size: 30px;
+      font-weight: 800;
+      margin-bottom: 10px;
+    }
+
+    .desc {
+      font-size: 15px;
+      line-height: 1.7;
+      color: #374151;
+      margin-bottom: 12px;
+    }
+
+    .lucky {
+      display: inline-block;
+      font-size: 13px;
+      color: #065f46;
+      background: #d1fae5;
+      padding: 6px 12px;
+      border-radius: 999px;
+    }
+
+    button {
+      width: 100%;
+      border: none;
+      border-radius: 16px;
+      padding: 15px 18px;
+      font-size: 17px;
+      font-weight: 800;
+      color: #fff;
+      background: #06c755;
+      box-shadow: 0 6px 0 #05a948;
+      cursor: pointer;
+      transition: transform 0.08s ease, box-shadow 0.08s ease;
+    }
+
+    button:active {
+      transform: translateY(3px);
+      box-shadow: 0 3px 0 #05a948;
+    }
+
+    footer {
+      margin-top: 18px;
+      font-size: 11px;
+      color: #9ca3af;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div id="profileBox" class="profile hidden">
+      <img id="avatar" alt="avatar" />
+      <div>
+        <div id="userName" class="profile-name"></div>
+        <div class="profile-sub">LINE ミニアプリ 初号机</div>
+      </div>
+    </div>
+
+    <h1>🔮 今日运势</h1>
+    <p id="status" class="status">正在连接 LINE...</p>
+
+    <div id="resultCard" class="card hidden">
+      <div id="emoji" class="emoji">🎁</div>
+      <div id="fortuneTitle" class="fortune-title"></div>
+      <div id="fortuneDesc" class="desc"></div>
+      <div id="luckyItem" class="lucky"></div>
+    </div>
+
+    <button id="drawBtn">抽一签</button>
+    <footer>仅供娱乐 · 第一次试作</footer>
+  </div>
+
+  <script>
+    // =========================================
+    // 1. 这里替换成你自己的 LIFF ID
+    // =========================================
+    const LIFF_ID = '2011789545-wufLFcvF';
+
+    const profileBox = document.getElementById('profileBox');
+    const avatar = document.getElementById('avatar');
+    const userName = document.getElementById('userName');
+    const statusEl = document.getElementById('status');
+    const resultCard = document.getElementById('resultCard');
+    const emojiEl = document.getElementById('emoji');
+    const fortuneTitleEl = document.getElementById('fortuneTitle');
+    const fortuneDescEl = document.getElementById('fortuneDesc');
+    const luckyItemEl = document.getElementById('luckyItem');
+    const drawBtn = document.getElementById('drawBtn');
+
+    const fortunes = [
+      {
+        title: '大吉',
+        emoji: '🎉',
+        desc: '今天做什么都很顺，适合主动发起一件事。',
+        lucky: '幸运色：金色',
+        color: '#f59e0b'
+      },
+      {
+        title: '中吉',
+        emoji: '✨',
+        desc: '节奏稳定，先完成小目标，会有意外收获。',
+        lucky: '幸运物：咖啡',
+        color: '#06c755'
+      },
+      {
+        title: '小吉',
+        emoji: '🍀',
+        desc: '适合整理和复盘，别急着做大决定。',
+        lucky: '幸运地点：窗边',
+        color: '#10b981'
+      },
+      {
+        title: '吉',
+        emoji: '🌈',
+        desc: '会遇到一个让你心情变好的小瞬间。',
+        lucky: '幸运数字：7',
+        color: '#3b82f6'
+      },
+      {
+        title: '末吉',
+        emoji: '🌱',
+        desc: '慢慢来反而更快，今天适合积累。',
+        lucky: '幸运动作：深呼吸',
+        color: '#8b5cf6'
+      },
+      {
+        title: '凶',
+        emoji: '🧸',
+        desc: '别慌，只是提醒你多检查一遍再行动。',
+        lucky: '幸运食物：甜食',
+        color: '#ef4444'
+      }
+    ];
+
+    function setStatus(text) {
+      statusEl.textContent = text;
+    }
+
+    function renderProfile(profile) {
+      avatar.src = profile.pictureUrl || '';
+      userName.textContent = profile.displayName || 'LINE 用户';
+      profileBox.classList.remove('hidden');
+    }
+
+    async function initLiff() {
+      // 没有填 LIFF ID 时，进入预览模式，方便先在浏览器里看效果
+      if (!LIFF_ID || LIFF_ID === 'YOUR_LIFF_ID') {
+        setStatus('预览模式：请替换 LIFF_ID 后在 LINE 中打开');
+        return;
+      }
+
+      try {
+        await liff.init({ liffId: LIFF_ID });
+
+        if (!liff.isLoggedIn()) {
+          liff.login();
+          return;
+        }
+
+        const profile = await liff.getProfile();
+        renderProfile(profile);
+        setStatus('LINE 连接成功');
+      } catch (err) {
+        console.error(err);
+        setStatus('LINE 初始化失败：' + err.message);
+      }
+    }
+
+    function drawFortune() {
+      const fortune = fortunes[Math.floor(Math.random() * fortunes.length)];
+
+      emojiEl.textContent = fortune.emoji;
+      fortuneTitleEl.textContent = fortune.title;
+      fortuneTitleEl.style.color = fortune.color;
+      fortuneDescEl.textContent = fortune.desc;
+      luckyItemEl.textContent = fortune.lucky;
+
+      resultCard.classList.remove('hidden');
+      resultCard.classList.remove('pop');
+      void resultCard.offsetWidth;
+      resultCard.classList.add('pop');
+
+      drawBtn.textContent = '再抽一次';
+    }
+
+    drawBtn.addEventListener('click', drawFortune);
+    initLiff();
+  </script>
+</body>
+</html>
